@@ -94,7 +94,7 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
   if (start_pose.header.frame_id != layered_costmap_->getGlobalFrameID()) {
     // error out if no transform available
     try {
-      tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), start_pose.header.frame_id, ros::Time::now());
+      tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), start_pose.header.frame_id, ros::Time(0));
     } catch (tf2::TransformException& ex) {
       ROS_ERROR_STREAM("Couldn't transform from " << layered_costmap_->getGlobalFrameID() << " to "
                                                   << start_pose.header.frame_id);
@@ -187,7 +187,7 @@ bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped po
 
   // error if no transform available between polygon and costmap
   try {
-    tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id, ros::Time::now());
+    tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id, ros::Time(0));
   } catch (tf2::TransformException& ex) {
     ROS_ERROR_STREAM("Couldn't transform from " << layered_costmap_->getGlobalFrameID() << " to "
                                                 << polygon_stamped.header.frame_id);
