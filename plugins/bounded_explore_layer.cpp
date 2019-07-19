@@ -22,9 +22,9 @@ PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, costmap_2d::La
 
 namespace frontier_exploration {
 
+using costmap_2d::FREE_SPACE;
 using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
-using costmap_2d::FREE_SPACE;
 
 BoundedExploreLayer::BoundedExploreLayer() {
 }
@@ -94,8 +94,7 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
   if (start_pose.header.frame_id != layered_costmap_->getGlobalFrameID()) {
     // error out if no transform available
     try {
-      tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), start_pose.header.frame_id, ros::Time::now(),
-                                 ros::Duration(10));
+      tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), start_pose.header.frame_id, ros::Time::now());
     } catch (tf2::TransformException& ex) {
       ROS_ERROR_STREAM("Couldn't transform from " << layered_costmap_->getGlobalFrameID() << " to "
                                                   << start_pose.header.frame_id);
@@ -188,8 +187,7 @@ bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped po
 
   // error if no transform available between polygon and costmap
   try {
-    tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id, ros::Time::now(),
-                               ros::Duration(10));
+    tf_buffer_.lookupTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id, ros::Time::now());
   } catch (tf2::TransformException& ex) {
     ROS_ERROR_STREAM("Couldn't transform from " << layered_costmap_->getGlobalFrameID() << " to "
                                                 << polygon_stamped.header.frame_id);
@@ -301,4 +299,4 @@ void BoundedExploreLayer::mapUpdateKeepObstacles(costmap_2d::Costmap2D& master_g
   }
   marked_ = true;
 }
-}
+}  // namespace frontier_exploration
