@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(frontier_exploration)
 
+add_compile_options(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   costmap_2d
   dynamic_reconfigure
@@ -8,7 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
   std_msgs
-  tf
+  tf2
+  tf2_geometry_msgs
   actionlib
   actionlib_msgs
   visualization_msgs
@@ -39,6 +42,10 @@ generate_messages(
   geometry_msgs std_msgs  actionlib_msgs move_base_msgs visualization_msgs
 )
 
+generate_dynamic_reconfigure_options(
+  cfg/BoundedExplorePlugin.cfg
+)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES explore_costmap
@@ -47,7 +54,8 @@ catkin_package(
     dynamic_reconfigure
     geometry_msgs
     roscpp
-    tf
+    tf2
+    tf2_geometry_msgs
     actionlib
   DEPENDS
     PCL
