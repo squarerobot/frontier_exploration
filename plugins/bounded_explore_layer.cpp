@@ -10,6 +10,9 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <boost/foreach.hpp>
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
+
 #include <frontier_exploration/BoundedExplorePluginConfig.h>
 #include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/GetNextFrontier.h>
@@ -27,6 +30,8 @@ using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
 
 BoundedExploreLayer::BoundedExploreLayer() {
+  tf_listener_ = new tf2_ros::TransformListener(tf_buffer_, true);
+  tf_buffer_.setUsingDedicatedThread(true);
 }
 
 BoundedExploreLayer::~BoundedExploreLayer() {
@@ -34,7 +39,6 @@ BoundedExploreLayer::~BoundedExploreLayer() {
   frontierService_.shutdown();
   delete dsrv_;
   dsrv_ = 0;
-  tf_listener_ = new tf2_ros::TransformListener(tf_buffer_);
 }
 
 void BoundedExploreLayer::onInitialize() {
@@ -194,11 +198,12 @@ bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped po
     return false;
   }
   // Transform all points of boundary polygon into costmap frame
-  geometry_msgs::Point in, out;
+  geometry_msgs::PointStamped in, out;
   BOOST_FOREACH (geometry_msgs::Point32 point32, polygon_stamped.polygon.points) {
-    in = costmap_2d::toPoint(point32);
+    in.point = costmap_2d::toPoint(point32);
+    in.header.frame_id = polygon_stamped.header.frame_id;
     tf_buffer_.transform(in, out, layered_costmap_->getGlobalFrameID());
-    polygon_.points.push_back(costmap_2d::toPoint32(out));
+    polygon_.points.push_back(costmap_2d::toPoint32(out.point));
   }
 
   // if empty boundary provided, set to whole map

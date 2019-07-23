@@ -30,11 +30,12 @@ public:
    * @param name Name for SimpleActionServer
    */
   FrontierExplorationServer(std::string name)
-    : tf_listener_(tf_buffer_)
+    : tf_listener_(tf_buffer_, true)
     , private_nh_("~")
     , as_(nh_, name, boost::bind(&FrontierExplorationServer::executeCb, this, _1), false)
     , move_client_("frontier_move_server", true)
     , retry_(5) {
+    tf_buffer_.setUsingDedicatedThread(true);
     private_nh_.param<double>("frequency", frequency_, 0.0);
     private_nh_.param<double>("goal_aliasing", goal_aliasing_, 0.1);
 
@@ -75,10 +76,15 @@ private:
     explore_costmap_ros_->resetLayers();
 
     // create costmap services
-    ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>(
-        "explore_costmap/explore_boundary/update_boundary_polygon");
-    ros::ServiceClient getNextFrontier = private_nh_.serviceClient<frontier_exploration::GetNextFrontier>(
-        "explore_costmap/explore_boundary/get_next_frontier");
+    ros::ServiceClient updateBoundaryPolygon =
+        private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/"
+                                                                               "update_boundary_polygon");
+    ros::ServiceClient getNextFrontier = private_nh_.serviceClient<frontier_exploration::GetNextFrontier>("explore_"
+                                                                                                          "costmap/"
+                                                                                                          "explore_"
+                                                                                                          "boundary/"
+                                                                                                          "get_next_"
+                                                                                                          "frontier");
 
     // wait for move_base and costmap services
     if (!move_client_.waitForServer() || !updateBoundaryPolygon.waitForExistence() ||
@@ -114,9 +120,12 @@ private:
 
       // evaluate if robot is within exploration boundary using robot_pose in boundary frame
       geometry_msgs::PoseStamped eval_pose = srv.request.start_pose;
-      if (eval_pose.header.frame_id != goal->explore_boundary.header.frame_id) {
-        tf_buffer_.transform(srv.request.start_pose, eval_pose, goal->explore_boundary.header.frame_id);
+      if (robot_pose.header.frame_id != goal->explore_boundary.header.frame_id) {
+        tf_buffer_.transform(robot_pose, eval_pose, goal->explore_boundary.header.frame_id);
+      } else {
+        eval_pose = robot_pose;
       }
+      srv.request.start_pose = eval_pose;
 
       // check if robot is not within exploration boundary and needs to return to center of search area
       if (goal->explore_boundary.polygon.points.size() > 0 &&
@@ -127,6 +136,7 @@ private:
         } else {
           ROS_DEBUG("Robot not initially in exploration boundary, traveling to center");
         }
+
         // get current robot position in frame of exploration center
         geometry_msgs::PointStamped eval_point;
         eval_point.header = eval_pose.header;
@@ -139,13 +149,10 @@ private:
         // set goal pose to exploration center
         goal_pose.header = goal->explore_center.header;
         goal_pose.pose.position = goal->explore_center.point;
-
         tf2::Quaternion quant;
         quant.setRPY(0, 0, yawOfVector(eval_point.point, goal->explore_center.point));
         tf2::convert(quant, goal_pose.pose.orientation);
-
       } else if (getNextFrontier.call(srv)) {  // if in boundary, try to find next frontier to search
-
         ROS_DEBUG("Found frontier to explore");
         success_ = true;
         goal_pose = feedback_.next_frontier = srv.response.next_frontier;
@@ -243,7 +250,7 @@ private:
     }
   }
 };
-}
+}  // namespace frontier_exploration
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "explore_server");
