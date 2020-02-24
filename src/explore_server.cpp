@@ -69,7 +69,6 @@ private:
    */
 
   void executeCb(const frontier_exploration::ExploreTaskGoalConstPtr& goal) {
-    ROS_INFO("NEW EXPLORE TASK RECIEVED");
     success_ = false;
     moving_ = false;
 
@@ -98,7 +97,7 @@ private:
       frontier_exploration::UpdateBoundaryPolygon srv;
       srv.request.explore_boundary = goal->explore_boundary;
       if (updateBoundaryPolygon.call(srv)) {
-        ROS_INFO("Region boundary set");
+        ROS_DEBUG("Region boundary set");
       } else {
         ROS_ERROR("Failed to set region boundary");
         as_.setAborted();
@@ -163,7 +162,6 @@ private:
 
         // search is succesful
         if (retry_ == 0 && success_) {
-          ROS_WARN("Finished exploring room");
           as_.setSucceeded();
           boost::unique_lock<boost::mutex> lock(move_client_lock_);
           move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
