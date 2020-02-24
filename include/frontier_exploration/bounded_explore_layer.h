@@ -102,7 +102,7 @@ private:
   ros::ServiceServer polygonService_;
   ros::ServiceServer frontierService_;
   geometry_msgs::Polygon polygon_;
-  tf2_ros::TransformListener *tf_listener_;
+  boost::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   tf2_ros::Buffer tf_buffer_;
 
   ros::Publisher frontier_cloud_pub;

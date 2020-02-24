@@ -30,7 +30,7 @@ using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
 
 BoundedExploreLayer::BoundedExploreLayer() {
-  tf_listener_ = new tf2_ros::TransformListener(tf_buffer_, true);
+  tf_listener_ = boost::make_shared<tf2_ros::TransformListener>(tf_buffer_, true);
   tf_buffer_.setUsingDedicatedThread(true);
 }
 
