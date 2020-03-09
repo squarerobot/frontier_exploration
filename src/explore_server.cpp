@@ -106,7 +106,6 @@ private:
     }
 
     // loop until all frontiers are explored
-    ros::Rate rate(frequency_);
     while (ros::ok() && as_.isActive()) {
       frontier_exploration::GetNextFrontier srv;
 
@@ -198,6 +197,7 @@ private:
       // check if continuous goal updating is enabled
       if (frequency_ > 0) {
         // sleep for specified frequency and then continue searching
+        ros::Rate rate(frequency_);
         rate.sleep();
       } else {
         // wait for movement to finish before continuing
